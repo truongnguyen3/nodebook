@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,13 +16,13 @@ import (
 	"github.com/ttacon/chalk"
 )
 
-func CliRun(notebookspath string, docker bool) {
+func CliRun(notebookspath string, docker bool, recipesFS fs.FS) {
 	if docker && !shared.IsDockerRunning() {
 		fmt.Println("docker is not running on the host, but --docker requested.")
 		os.Exit(1)
 	}
 
-	_, nbRegistry := baseServices(notebookspath)
+	_, nbRegistry := baseServices(notebookspath, recipesFS)
 
 	notebooks := nbRegistry.GetNotebooks()
 	if len(notebooks) == 0 {

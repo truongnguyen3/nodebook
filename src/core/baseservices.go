@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 
 	"github.com/netgusto/nodebook/src/core/shared/recipe"
@@ -9,10 +10,10 @@ import (
 	pkgErrors "github.com/pkg/errors"
 )
 
-func baseServices(notebooksPath string) (*service.RecipeRegistry, *service.NotebookRegistry) {
+func baseServices(notebooksPath string, recipesFS fs.FS) (*service.RecipeRegistry, *service.NotebookRegistry) {
 	// Recipe registry
 	recipeRegistry := service.NewRecipeRegistry()
-	recipe.AddRecipesToRegistry(recipeRegistry)
+	recipe.AddRecipesToRegistry(recipeRegistry, recipesFS)
 
 	// Notebook registry
 	nbRegistry := service.NewNotebookRegistry(notebooksPath, recipeRegistry)

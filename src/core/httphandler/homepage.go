@@ -1,6 +1,7 @@
 package httphandler
 
 import (
+	"io/fs"
 	"net/http"
 	"sort"
 	"strings"
@@ -12,9 +13,10 @@ func HomePageHandler(
 	notebookregistry *service.NotebookRegistry,
 	reciperegistry *service.RecipeRegistry,
 	routes *service.Routes,
+	frontendFS fs.FS,
 ) HTTPHandler {
 	return func(res http.ResponseWriter, req *http.Request) {
-		strContent, err := generatePageHtml("home", map[string]interface{}{
+		strContent, err := generatePageHtml(frontendFS, "home", map[string]interface{}{
 			"newnotebookurl": routes.APINewNotebook(),
 			"notebooks":      listNotebooks(notebookregistry, routes),
 			"recipes":        reciperegistry.GetRecipes(),

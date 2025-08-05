@@ -1,11 +1,13 @@
 package recipe
 
 import (
+	"io/fs"
+
 	"github.com/netgusto/nodebook/src/core/shared/recipe/helper"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
 
-func Swift() types.Recipe {
+func Swift(recipesFS fs.FS) types.Recipe {
 	return helper.StdRecipe(
 		"swift",      // key
 		"Swift",      // name
@@ -21,5 +23,6 @@ func Swift() types.Recipe {
 		},
 		nil,
 		nil,
+		recipesFS,
 	)
 }

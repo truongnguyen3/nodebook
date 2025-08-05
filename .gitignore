@@ -5,3 +5,4 @@ node_modules
 src/core/core
 dist/nbk
 pkged.go
+nodebook

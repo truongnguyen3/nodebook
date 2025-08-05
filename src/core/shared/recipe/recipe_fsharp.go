@@ -1,11 +1,12 @@
 package recipe
 
 import (
+	"io/fs"
 	"github.com/netgusto/nodebook/src/core/shared/recipe/helper"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
 
-func Fsharp() types.Recipe {
+func Fsharp(recipesFS fs.FS) types.Recipe {
 	return helper.StdRecipe(
 		"fsharp",     // key
 		"F#",         // name
@@ -24,5 +25,6 @@ func Fsharp() types.Recipe {
 			return env
 		},
 		nil,
+		recipesFS,
 	)
 }

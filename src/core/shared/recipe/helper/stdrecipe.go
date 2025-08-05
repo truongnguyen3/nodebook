@@ -2,6 +2,7 @@ package helper
 
 import (
 	"io"
+	"io/fs"
 
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
@@ -15,6 +16,7 @@ func StdRecipe(
 	dockerCmd, localCmd cmdBuilderFunc,
 	addEnv envBuilderFunc,
 	addMounts mountsBuilderFunc,
+	recipesFS fs.FS,
 ) types.Recipe {
 	return types.MakeRecipeReal(
 		key,                 // key
@@ -61,7 +63,7 @@ func StdRecipe(
 			}, writeStdOut, writeStdErr, writeInfo)
 		},
 		func(recipe types.Recipe, notebookspath, name string) error { // init
-			return defaultInitNotebook(recipe, notebookspath, name)
+			return defaultInitNotebook(recipe, notebookspath, name, recipesFS)
 		},
 	)
 }

@@ -2,19 +2,19 @@ package httphandler
 
 import (
 	"encoding/json"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
-	"github.com/markbates/pkger"
 	"github.com/netgusto/nodebook/src/core/shared/service"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
 
 type HTTPHandler = func(res http.ResponseWriter, req *http.Request)
 
-func generatePageHtml(routename string, params map[string]interface{}) (string, error) {
-	f, err := pkger.Open("/dist/frontend/index.html")
+func generatePageHtml(frontendFS fs.FS, routename string, params map[string]interface{}) (string, error) {
+	f, err := frontendFS.Open("index.html")
 	if err != nil {
 		panic(err)
 	}

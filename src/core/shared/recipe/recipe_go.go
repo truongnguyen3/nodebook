@@ -1,11 +1,13 @@
 package recipe
 
 import (
+	"io/fs"
+
 	"github.com/netgusto/nodebook/src/core/shared/recipe/helper"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
 
-func Go() types.Recipe {
+func Go(recipesFS fs.FS) types.Recipe {
 	return helper.StdRecipe(
 		"go",      // key
 		"Go",      // name
@@ -21,5 +23,6 @@ func Go() types.Recipe {
 		},
 		nil,
 		nil,
+		recipesFS,
 	)
 }

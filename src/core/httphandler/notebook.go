@@ -1,6 +1,7 @@
 package httphandler
 
 import (
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -11,7 +12,7 @@ import (
 	pkgErrors "github.com/pkg/errors"
 )
 
-func NotebookHandler(notebookRegistry *service.NotebookRegistry, routes *service.Routes) HTTPHandler {
+func NotebookHandler(notebookRegistry *service.NotebookRegistry, routes *service.Routes, frontendFS fs.FS) HTTPHandler {
 	return func(res http.ResponseWriter, req *http.Request) {
 		params := mux.Vars(req)
 		name, found := params["name"]
@@ -32,7 +33,7 @@ func NotebookHandler(notebookRegistry *service.NotebookRegistry, routes *service
 			return
 		}
 
-		strContent, err := generatePageHtml("notebook", map[string]interface{}{
+		strContent, err := generatePageHtml(frontendFS, "notebook", map[string]interface{}{
 			"notebook":          extractFrontendNotebookSummary(notebook, routes),
 			"homeurl":           routes.Home(),
 			"renamenotebookurl": routes.APINotebookRename(notebook.GetName()),

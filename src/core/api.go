@@ -1,10 +1,10 @@
 package core
 
 import (
+	"io/fs"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/markbates/pkger"
 	"github.com/netgusto/nodebook/src/core/httphandler"
 	"github.com/netgusto/nodebook/src/core/shared/service"
 )
@@ -15,13 +15,14 @@ func makeAPI(
 	routes *service.Routes,
 	csrfService *service.CSRFService,
 	useDocker bool,
+	frontendFS fs.FS,
 ) *mux.Router {
-	fs := http.FileServer(pkger.Dir("/dist/frontend/"))
+	fileserver := http.FileServer(http.FS(frontendFS))
 
 	root := mux.NewRouter()
-	root.Path("/").HandlerFunc(httphandler.HomePageHandler(nbRegistry, recipeRegistry, routes))
+	root.Path("/").HandlerFunc(httphandler.HomePageHandler(nbRegistry, recipeRegistry, routes, frontendFS))
 	root.Path("/csrf").HandlerFunc(httphandler.CsrfHandler(csrfService))
-	root.Path("/notebook/{name:.+}").HandlerFunc(httphandler.NotebookHandler(nbRegistry, routes))
+	root.Path("/notebook/{name:.+}").HandlerFunc(httphandler.NotebookHandler(nbRegistry, routes, frontendFS))
 
 	api := root.Methods("post").PathPrefix("/api").Subrouter()
 	api.Path("/notebook/new").HandlerFunc(httphandler.ApiNewNotebookHandler(
@@ -37,7 +38,7 @@ func makeAPI(
 	api.Path("/notebook/{name:.+}/exec").HandlerFunc(httphandler.ApiNotebookExecHandler(nbRegistry, csrfService, useDocker))
 	api.Path("/notebook/{name:.+}/stop").HandlerFunc(httphandler.ApiNotebookStopHandler(nbRegistry, csrfService))
 
-	root.PathPrefix("/").Handler(fs)
+	root.PathPrefix("/").Handler(fileserver)
 
 	return root
 }

@@ -1,25 +1,28 @@
 package recipe
 
 import (
+	"io/fs"
+
 	"github.com/netgusto/nodebook/src/core/shared/recipe/helper"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
 
-func Haskell() types.Recipe {
+func Haskell(recipesFS fs.FS) types.Recipe {
 	return helper.StdRecipe(
-		"haskell", // key
-		"Haskell", // name
+		"haskell",      // key
+		"Haskell",     // name
 		"Haskell", // language
 		"main.hs", // mainfile
-		"haskell", // cmmode
+		"haskell",   // cmmode
 		"docker.io/library/haskell:latest",
 		func(notebook types.Notebook) []string {
-			return []string{"sh", "-c", "ghc -v0 -H14m -outputdir /tmp -o /tmp/code \"/code/" + notebook.GetRecipe().GetMainfile() + "\" && /tmp/code"}
+			return []string{"runhaskell", "/code/" + notebook.GetRecipe().GetMainfile()}
 		},
 		func(notebook types.Notebook) []string {
-			return []string{"bash", "-c", "ghc -v0 -H14m -outputdir /tmp -o /tmp/code \"" + notebook.GetMainFileAbsPath() + "\" && /tmp/code"}
+			return []string{"runhaskell", notebook.GetMainFileAbsPath()}
 		},
 		nil,
 		nil,
+		recipesFS,
 	)
 }

@@ -1,11 +1,13 @@
 package recipe
 
 import (
+	"io/fs"
+
 	"github.com/netgusto/nodebook/src/core/shared/recipe/helper"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
 
-func Php() types.Recipe {
+func Php(recipesFS fs.FS) types.Recipe {
 	return helper.StdRecipe(
 		"php",      // key
 		"PHP",      // name
@@ -21,5 +23,6 @@ func Php() types.Recipe {
 		},
 		nil,
 		nil,
+		recipesFS,
 	)
 }

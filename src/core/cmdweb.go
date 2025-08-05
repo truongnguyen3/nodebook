@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -11,13 +12,13 @@ import (
 	"github.com/netgusto/nodebook/src/core/shared/service"
 )
 
-func WebRun(notebookspath string, docker bool, bindaddress string, port int) {
+func WebRun(notebookspath string, docker bool, bindaddress string, port int, frontendFS fs.FS, recipesFS fs.FS) {
 	if docker && !shared.IsDockerRunning() {
 		fmt.Println("docker is not running on the host, but --docker requested.")
 		os.Exit(1)
 	}
 
-	recipeRegistry, nbRegistry := baseServices(notebookspath)
+	recipeRegistry, nbRegistry := baseServices(notebookspath, recipesFS)
 
 	csrfService := service.NewCSRFService()
 	routes := service.NewRoutes()
@@ -28,6 +29,7 @@ func WebRun(notebookspath string, docker bool, bindaddress string, port int) {
 		routes,
 		csrfService,
 		docker,
+		frontendFS,
 	)
 
 	fmt.Printf("nbk listening on %s:%d\n", bindaddress, port)

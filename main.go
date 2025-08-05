@@ -1,18 +1,32 @@
 package main
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/markbates/pkger"
 	"github.com/netgusto/nodebook/src/core"
 	"github.com/pkg/errors"
 )
 
-var _ = pkger.Include("/dist/frontend/")
-var _ = pkger.Include("/src/recipes/")
+//go:embed dist/frontend
+var frontendFS embed.FS
+
+//go:embed src/recipes
+var recipesFS embed.FS
+
+// GetFrontendFS returns the embedded frontend filesystem
+func GetFrontendFS() embed.FS {
+	return frontendFS
+}
+
+// GetRecipesFS returns the embedded recipes filesystem  
+func GetRecipesFS() embed.FS {
+	return recipesFS
+}
 
 func main() {
 
@@ -43,14 +57,20 @@ func main() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		core.WebRun(absPath, *webCmdDocker, *webCmdBindAddress, *webCmdPort)
+		// Create a subfilesystem for the frontend (removing "dist/" prefix)
+		frontendSubFS, err := fs.Sub(frontendFS, "dist/frontend")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		core.WebRun(absPath, *webCmdDocker, *webCmdBindAddress, *webCmdPort, frontendSubFS, recipesFS)
 	case cliCmd.FullCommand():
 		absPath, err := absolutizePath(*cliCmdPath)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		core.CliRun(absPath, *cliCmdDocker)
+		core.CliRun(absPath, *cliCmdDocker, recipesFS)
 	}
 }
 

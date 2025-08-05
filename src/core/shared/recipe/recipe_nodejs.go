@@ -1,25 +1,28 @@
 package recipe
 
 import (
+	"io/fs"
+
 	"github.com/netgusto/nodebook/src/core/shared/recipe/helper"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
 
-func NodeJS() types.Recipe {
+func NodeJS(recipesFS fs.FS) types.Recipe {
 	return helper.StdRecipe(
-		"nodejs",     // key
-		"NodeJS",     // name
-		"JavaScript", // language
-		"index.js",   // mainfile
+		"nodejs",   // key
+		"Node.js",  // name
+		"NodeJS",   // language
+		"index.js", // mainfile
 		"javascript", // cmmode
-		"docker.io/library/node:alpine",
+		"docker.io/library/node:latest",
 		func(notebook types.Notebook) []string {
-			return []string{"node", "--harmony", "/code/" + notebook.GetRecipe().GetMainfile()}
+			return []string{"node", "/code/" + notebook.GetRecipe().GetMainfile()}
 		},
 		func(notebook types.Notebook) []string {
-			return []string{"node", "--harmony", notebook.GetMainFileAbsPath()}
+			return []string{"node", notebook.GetMainFileAbsPath()}
 		},
 		nil,
 		nil,
+		recipesFS,
 	)
 }

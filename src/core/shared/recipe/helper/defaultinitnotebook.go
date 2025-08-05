@@ -2,33 +2,44 @@ package helper
 
 import (
 	"io"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
-	"github.com/markbates/pkger"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 	"github.com/pkg/errors"
 )
 
-func defaultInitNotebook(recipe types.Recipe, notebookspath, name string) error {
+func defaultInitNotebook(recipe types.Recipe, notebookspath, name string, recipesFS fs.FS) error {
 
 	dirPerms := os.FileMode(0755)
 	filePerm := os.FileMode(0644)
 
-	srcPath := path.Join(recipe.GetDir(), "defaultcontent")
+	// Remove /src/recipes prefix from recipe.GetDir()
+	recipeDir := strings.TrimPrefix(recipe.GetDir(), "/src/recipes/")
+	srcPath := path.Join(recipeDir, "defaultcontent")
 	destPathRoot := path.Join(notebookspath, name)
+	
 	if err := os.MkdirAll(destPathRoot, dirPerms); err != nil {
 		return errors.Wrap(err, "defaultInitNotebook: Could not create notebook directory "+destPathRoot)
 	}
 
-	return pkger.Walk(srcPath, func(pathStr string, info os.FileInfo, err error) error {
+	return fs.WalkDir(recipesFS, srcPath, func(pathStr string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 
-		pathParts, _ := pkger.Parse(pathStr)
-		relPath := pathParts.Name[len(srcPath):] // make path relative to "defaultcontent"
+		// make path relative to srcPath
+		relPath := strings.TrimPrefix(pathStr, srcPath)
+		if relPath == "" {
+			return nil // skip the root directory itself
+		}
+		
 		destPath := path.Join(destPathRoot, relPath)
 
-		if info.IsDir() {
+		if d.IsDir() {
 			if err := os.MkdirAll(destPath, dirPerms); err != nil {
 				return errors.Wrap(err, "defaultInitNotebook: Could not create notebook directory "+destPath)
 			}
@@ -38,7 +49,7 @@ func defaultInitNotebook(recipe types.Recipe, notebookspath, name string) error 
 				return errors.Wrap(err, "defaultInitNotebook: Could not create notebook directory "+dir)
 			}
 
-			source, err := pkger.Open(pathStr)
+			source, err := recipesFS.Open(pathStr)
 			if err != nil {
 				return errors.Wrap(err, "defaultInitNotebook: Could not open notebook default content file "+pathStr)
 			}

@@ -1,41 +1,28 @@
 package recipe
 
 import (
-	"os"
-	"path"
+	"io/fs"
 
 	"github.com/netgusto/nodebook/src/core/shared/recipe/helper"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
 
-func Typescript() types.Recipe {
+func Typescript(recipesFS fs.FS) types.Recipe {
 	return helper.StdRecipe(
 		"typescript", // key
 		"TypeScript", // name
 		"TypeScript", // language
 		"index.ts",   // mainfile
 		"javascript", // cmmode
-		"docker.io/sandrokeil/typescript:latest",
+		"docker.io/netgusto/typescript-compiler:latest",
 		func(notebook types.Notebook) []string {
-			if hasTsNode(notebook) {
-				return []string{"sh", "-c", "node_modules/.bin/ts-node " + notebook.GetRecipe().GetMainfile()}
-			}
-
-			return []string{"sh", "-c", "tsc --allowJs --outFile /tmp/code.js " + notebook.GetRecipe().GetMainfile() + " && node /tmp/code.js"}
+			return []string{"sh", "-c", "cd /code && tsc " + notebook.GetRecipe().GetMainfile() + " && node " + notebook.GetRecipe().GetMainfile()[:len(notebook.GetRecipe().GetMainfile())-3] + ".js"}
 		},
 		func(notebook types.Notebook) []string {
-			if hasTsNode(notebook) {
-				return []string{"sh", "-c", "node_modules/.bin/ts-node " + notebook.GetRecipe().GetMainfile()}
-			}
-
-			return []string{"sh", "-c", "tsc --allowJs --outFile /tmp/code.js " + notebook.GetRecipe().GetMainfile() + " && node /tmp/code.js"}
+			return []string{"sh", "-c", "cd " + notebook.GetAbsdir() + " && tsc " + notebook.GetRecipe().GetMainfile() + " && node " + notebook.GetRecipe().GetMainfile()[:len(notebook.GetRecipe().GetMainfile())-3] + ".js"}
 		},
 		nil,
 		nil,
+		recipesFS,
 	)
-}
-
-func hasTsNode(notebook types.Notebook) bool {
-	info, err := os.Stat(path.Join(notebook.GetAbsdir(), "node_modules", ".bin", "ts-node"))
-	return err == nil && info.Mode().IsRegular()
 }

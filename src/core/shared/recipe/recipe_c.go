@@ -1,25 +1,28 @@
 package recipe
 
 import (
+	"io/fs"
+
 	"github.com/netgusto/nodebook/src/core/shared/recipe/helper"
 	"github.com/netgusto/nodebook/src/core/shared/types"
 )
 
-func C() types.Recipe {
+func C(recipesFS fs.FS) types.Recipe {
 	return helper.StdRecipe(
-		"c",      // key
-		"c11",    // name
-		"C",      // language
-		"main.c", // mainfile
-		"clike",  // cmmode
+		"c",        // key
+		"C",        // name
+		"C",        // language
+		"main.c",   // mainfile
+		"clike",    // cmmode
 		"docker.io/library/gcc:latest",
 		func(notebook types.Notebook) []string {
-			return []string{"sh", "-c", "gcc -Wall -Wextra -Werror -o /tmp/code.out /code/" + notebook.GetRecipe().GetMainfile() + " && /tmp/code.out"}
+			return []string{"sh", "-c", "cd /code && gcc -o main " + notebook.GetRecipe().GetMainfile() + " && ./main"}
 		},
 		func(notebook types.Notebook) []string {
-			return []string{"sh", "-c", "gcc -Wall -Wextra -Werror -o /tmp/code.out '" + notebook.GetMainFileAbsPath() + "' && /tmp/code.out"}
+			return []string{"sh", "-c", "cd " + notebook.GetAbsdir() + " && gcc -o main " + notebook.GetRecipe().GetMainfile() + " && ./main"}
 		},
 		nil,
 		nil,
+		recipesFS,
 	)
 }

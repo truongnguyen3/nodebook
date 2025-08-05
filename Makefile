@@ -1,15 +1,15 @@
 .PHONY: deps build install deps-frontend build-frontend embed-frontend
 
 deps:
-	go get github.com/markbates/pkger/cmd/pkger
+	# No longer needed - embed is built into Go
 
 embed-frontend:
-	pkger
+	# No longer needed - embed happens at compile time
 
-build: embed-frontend
+build:
 	go build -o dist/nodebook .
 
-install: embed-frontend
+install:
 	go install .
 	@echo "nodebook built and installed."
 
