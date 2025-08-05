@@ -1,0 +1,76 @@
+# Dockerfile.full - Includes language runtimes for local execution
+# WARNING: This creates a much larger image (~2GB+) but supports local execution
+
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install system dependencies and language runtimes
+RUN apt-get update && apt-get install -y \
+    # System tools
+    ca-certificates \
+    curl \
+    wget \
+    git \
+    build-essential \
+    # Programming language runtimes
+    python3 \
+    python3-pip \
+    nodejs \
+    npm \
+    openjdk-17-jdk \
+    golang-go \
+    php \
+    php-cli \
+    ruby \
+    lua5.3 \
+    r-base \
+    clojure \
+    elixir \
+    ocaml \
+    ghc \
+    # C/C++ compilers
+    gcc \
+    g++ \
+    # Additional tools
+    rustc \
+    swift \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install additional language tools
+RUN pip3 install --no-cache-dir setuptools wheel
+
+# Install TypeScript
+RUN npm install -g typescript
+
+# Set up Go environment
+ENV GOPATH=/go
+ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+
+# Create app directory
+WORKDIR /app
+
+# Create user for security
+RUN groupadd -r nodebook && useradd -r -g nodebook nodebook
+
+# Copy the pre-built binary (build it first with: go build -o nodebook .)
+COPY nodebook .
+
+# Create notebooks directory
+RUN mkdir -p /app/notebooks && \
+    chown -R nodebook:nodebook /app
+
+# Switch to non-root user
+USER nodebook
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+
+# Default command - use local execution mode
+CMD ["./nodebook", "--bindaddress", "0.0.0.0", "/app/notebooks"]

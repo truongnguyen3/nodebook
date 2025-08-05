@@ -1,0 +1,71 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+LICENSE
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build outputs (except needed dist/frontend)
+dist/nodebook
+nodebook
+
+# Dependencies
+node_modules/
+vendor/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Logs
+*.log
+logs/
+
+# Test files
+*_test.go
+test/
+coverage.out
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Development scripts
+fix_recipes.sh
+scripts/
+
+# Frontend development files
+src/frontend/node_modules/
+src/frontend/.cache/
+src/frontend/.parcel-cache/
+src/frontend/dist/
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
