@@ -2,6 +2,7 @@
 
 # Nodebook Deployment Script
 # Usage: ./scripts/deploy.sh [docker|full|build-only]
+# Note: Frontend should be pre-built in dist/frontend/ directory
 
 set -e
 
@@ -45,21 +46,20 @@ check_docker() {
     fi
 }
 
-# Build frontend
-build_frontend() {
-    log "Building frontend..."
-    if [ -d "src/frontend" ]; then
-        cd src/frontend
-        if [ ! -d "node_modules" ]; then
-            log "Installing frontend dependencies..."
-            npm install
-        fi
-        log "Building frontend assets..."
-        npm run build
-        cd ../..
-        success "Frontend built successfully"
+# Check frontend build
+check_frontend() {
+    log "Checking frontend build..."
+    if [ -d "dist/frontend" ]; then
+        success "Frontend already built and available in dist/frontend"
     else
-        warning "Frontend directory not found, skipping frontend build"
+        warning "Frontend build not found in dist/frontend"
+        if [ -d "src/frontend" ]; then
+            log "Frontend source found, but build is missing"
+            log "Please run 'make build-frontend' to build the frontend first"
+            error "Frontend build required but not found"
+        else
+            error "Neither frontend build nor source found"
+        fi
     fi
 }
 
@@ -82,7 +82,7 @@ deploy_docker() {
     log "Deploying Nodebook in Docker mode..."
     
     check_docker
-    build_frontend
+    check_frontend
     setup_notebooks
     
     log "Building Docker image..."
@@ -101,7 +101,7 @@ deploy_full() {
     log "Deploying Nodebook with full language support..."
     
     check_docker
-    build_frontend
+    check_frontend
     setup_notebooks
     
     # Build the Go binary first for full mode
@@ -126,7 +126,7 @@ build_only() {
     log "Building Nodebook (no deployment)..."
     
     check_docker
-    build_frontend
+    check_frontend
     
     log "Building Docker image..."
     docker-compose build
@@ -159,18 +159,44 @@ health_check() {
 
 # Show usage
 usage() {
-    echo "Usage: $0 [docker|full|build-only|health]"
+    echo "Usage: $0 [docker|full|build-frontend|build-only|health]"
     echo ""
     echo "Commands:"
-    echo "  docker     Deploy with Docker mode (recommended, ~50MB)"
-    echo "  full       Deploy with full language support (~2GB)"
-    echo "  build-only Build Docker image without deploying"
-    echo "  health     Check if deployed application is healthy"
+    echo "  docker         Deploy with Docker mode (recommended, ~50MB)"
+    echo "  full           Deploy with full language support (~2GB)"
+    echo "  build-frontend Deploy with frontend building (Node 16, ~80MB)"
+    echo "  build-only     Build Docker image without deploying"
+    echo "  health         Check if deployed application is healthy"
+    echo ""
+    echo "Prerequisites:"
+    echo "  - Frontend pre-built in dist/frontend/ (for docker/full modes)"
+    echo "  - Docker and Docker Compose must be installed"
     echo ""
     echo "Examples:"
-    echo "  $0 docker    # Quick deployment with Docker execution"
-    echo "  $0 full      # Full deployment with local language runtimes"
-    echo "  $0 health    # Check application health"
+    echo "  $0 docker          # Quick deployment with pre-built frontend"
+    echo "  $0 build-frontend  # Build frontend from source with Node 16"
+    echo "  $0 full            # Full deployment with local language runtimes"
+    echo "  $0 health          # Check application health"
+}
+
+# Deploy with frontend building (Node 16)
+deploy_build_frontend() {
+    log "Deploying Nodebook with frontend building (Node 16)..."
+    
+    check_docker
+    setup_notebooks
+    
+    log "Building Docker image with frontend build..."
+    docker-compose -f docker-compose.with-frontend-build.yml build
+    
+    log "Starting services..."
+    docker-compose -f docker-compose.with-frontend-build.yml up -d
+    
+    success "Nodebook (with frontend build) deployed successfully!"
+    log "Access the application at: http://localhost:8000"
+    log "View logs with: docker-compose -f docker-compose.with-frontend-build.yml logs -f"
+    
+    health_check
 }
 
 # Main script
@@ -183,6 +209,9 @@ main() {
         "full")
             deploy_full
             health_check
+            ;;
+        "build-frontend")
+            deploy_build_frontend
             ;;
         "build-only")
             build_only

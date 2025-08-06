@@ -1,15 +1,5 @@
 # Multi-stage build for Nodebook
-# Stage 1: Build frontend
-FROM node:18-alpine AS frontend-builder
-
-WORKDIR /app
-COPY src/frontend/package*.json ./
-RUN npm ci --only=production
-
-COPY src/frontend/ ./
-RUN npm run build
-
-# Stage 2: Build Go application
+# Stage 1: Build Go application
 FROM golang:1.24-alpine AS go-builder
 
 # Install git (needed for some Go modules)
@@ -21,23 +11,35 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
+# Copy source code and pre-built frontend
 COPY . .
 
-# Copy built frontend from previous stage
-COPY --from=frontend-builder /app/../../dist/frontend ./dist/frontend
+# Verify frontend is already built
+RUN ls -la dist/frontend/ || (echo "Error: Frontend not found in dist/frontend/. Please build frontend first." && exit 1)
 
-# Build the Go binary
+# Build the Go binary for Linux
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o nodebook .
 
-# Stage 3: Final runtime image
+# Stage 2: Runtime image with language support
 FROM alpine:latest
 
-# Install Docker CLI (for docker mode execution)
+# Install necessary packages including language runtimes
 RUN apk add --no-cache \
     ca-certificates \
-    docker \
     tzdata \
+    python3 \
+    py3-pip \
+    nodejs \
+    npm \
+    openjdk17-jre \
+    php \
+    ruby \
+    lua5.3 \
+    gcc \
+    g++ \
+    rust \
+    curl \
+    wget \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /app
@@ -46,8 +48,10 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodebook && \
     adduser -u 1001 -S nodebook -G nodebook
 
-# Copy the binary from builder stage
+# Copy the Linux binary from builder stage
 COPY --from=go-builder /app/nodebook .
+COPY --from=go-builder /app/dist/frontend ./dist/frontend
+COPY --from=go-builder /app/src/recipes ./src/recipes
 
 # Create notebooks directory
 RUN mkdir -p /app/notebooks && \
@@ -63,5 +67,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8000/ || exit 1
 
-# Default command - use Docker mode for code execution
-CMD ["./nodebook", "--docker", "--bindaddress", "0.0.0.0", "/app/notebooks"]
+# Default command - web mode (local execution since we're in a container)
+CMD ["./nodebook", "web", "--bindaddress", "0.0.0.0", "--port", "8000", "/app/notebooks"]

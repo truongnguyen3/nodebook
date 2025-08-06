@@ -8,10 +8,12 @@ Get Nodebook running in Docker in under 2 minutes!
 # 1. Clone and enter directory
 git clone <repository> && cd nodebook
 
-# 2. Deploy with one command
+# 2. Frontend is already built in dist/frontend/ ✅
+
+# 3. Deploy with one command
 ./scripts/deploy.sh docker
 
-# 3. Open in browser
+# 4. Open in browser
 open http://localhost:8000
 ```
 
@@ -74,6 +76,11 @@ nodebook/
 ```
 
 ## 🔧 Configuration
+
+### Prerequisites
+- ✅ **Frontend pre-built** in `dist/frontend/` directory
+- ✅ **Docker & Docker Compose** installed
+- ✅ **Go 1.24** binary available
 
 ### Ports
 - **8000** - Main application port

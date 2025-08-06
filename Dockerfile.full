@@ -45,18 +45,16 @@ RUN pip3 install --no-cache-dir setuptools wheel
 # Install TypeScript
 RUN npm install -g typescript
 
-# Set up Go environment
-ENV GOPATH=/go
-ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
-
 # Create app directory
 WORKDIR /app
 
 # Create user for security
 RUN groupadd -r nodebook && useradd -r -g nodebook nodebook
 
-# Copy the pre-built binary (build it first with: go build -o nodebook .)
-COPY nodebook .
+# Copy the pre-built binary and necessary files
+COPY dist/nodebook .
+COPY dist/frontend ./dist/frontend
+COPY src/recipes ./src/recipes
 
 # Create notebooks directory
 RUN mkdir -p /app/notebooks && \
@@ -72,5 +70,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/ || exit 1
 
-# Default command - use local execution mode
-CMD ["./nodebook", "--bindaddress", "0.0.0.0", "/app/notebooks"]
+# Default command - use local execution mode (all runtimes available)
+CMD ["./nodebook", "web", "--bindaddress", "0.0.0.0", "--port", "8000", "/app/notebooks"]

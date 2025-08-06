@@ -4,6 +4,10 @@ This guide explains how to deploy Nodebook using Docker in various configuration
 
 ## 🚀 Quick Start
 
+### Prerequisites
+- ✅ Frontend already built in `dist/frontend/` directory
+- ✅ Docker and Docker Compose installed
+
 ### Option 1: Docker Mode (Recommended) - Lightweight ~50MB
 
 ```bash
@@ -14,13 +18,24 @@ docker-compose up -d
 open http://localhost:8000
 ```
 
-### Option 2: Full Language Support - Large ~2GB
+### Option 2: Frontend Building Mode - Medium ~80MB
+*Use this if you need to build frontend from source*
+
+```bash
+# 1. Build with frontend compilation (Node 16)
+docker-compose -f docker-compose.with-frontend-build.yml up -d
+
+# 2. Access the application
+open http://localhost:8000
+```
+
+### Option 3: Full Language Support - Large ~2GB
 
 ```bash
 # 1. Build and run with full language support
 docker-compose -f docker-compose.full.yml up -d
 
-# 2. Access the application  
+# 2. Access the application
 open http://localhost:8000
 ```
 

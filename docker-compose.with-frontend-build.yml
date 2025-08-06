@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  nodebook:
+    build:
+      context: .
+      dockerfile: Dockerfile.with-frontend-build
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount notebooks directory for persistence
+      - ./notebooks:/app/notebooks
+      # Mount Docker socket for Docker mode execution
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - nodebook
+    restart: unless-stopped
